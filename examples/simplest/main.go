@@ -27,7 +27,7 @@ func main() {
 
 	router.HandleFunc("/access", handleAccess).Methods("GET")
 
-	// If no of handlers above (exclude middlewires) matches, this will match as it's path ("") matches any path
+	// If no of handlers above (exclude middlewires) matched, this will match as it's path ("") matches any path
 	// It also shows that order of handlers is important
 	router.HandleFunc("", handleNotFound)
 

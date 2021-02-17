@@ -8,7 +8,4 @@ go get github.com/don2quixote/ninja
 ```
 
 ## Usage
-Simplest example of ninja's usage:
-```go
-// Not ready now
-```
+Simplest example of ninja's usage can be found in examples directory

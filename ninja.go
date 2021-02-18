@@ -5,30 +5,23 @@ import (
 	"strings"
 )
 
-type path []string
-
 func (p path) matches(requestPath path) bool {
-	if len(requestPath) < len(p) {
+	if len(p) > len(requestPath) {
 		return false
 	}
 
-	pathMatches := true
-
 	for i := range requestPath {
-		if len(p) <= i {
-			break
+		if i >= len(p) {
+			return true
 		} else if p[i] == "" {
-			break
+			return true
 		} else if requestPath[i] != p[i] {
-			pathMatches = false
-			break
+			return false
 		}
 	}
 
-	return pathMatches
+	return true
 }
-
-type methods []string
 
 func (m methods) has(method string) bool {
 	if len(m) == 0 {
@@ -42,29 +35,6 @@ func (m methods) has(method string) bool {
 	}
 
 	return false
-}
-
-type route struct {
-	path    path
-	methods methods
-	handler http.Handler
-}
-
-type middlewireHandler func(http.ResponseWriter, *http.Request) bool
-
-type middlewire struct {
-	path    path
-	methods methods
-	async   bool
-	handler middlewireHandler
-}
-
-// The reason I used max count is avoiding using pointers ([]*route and []*Middlewire)
-type Router struct {
-	routesMaxCount      int
-	middlewiresMaxCount int
-	routes              []route
-	middlewires         []middlewire
 }
 
 func CreateRouter(routesCount, middlewiresCount int) *Router {

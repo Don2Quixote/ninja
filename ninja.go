@@ -5,17 +5,56 @@ import (
 	"strings"
 )
 
+type path []string
+
+func (p path) matches(requestPath path) bool {
+	if len(requestPath) < len(p) {
+		return false
+	}
+
+	pathMatches := true
+
+	for i := range requestPath {
+		if len(p) <= i {
+			break
+		} else if p[i] == "" {
+			break
+		} else if requestPath[i] != p[i] {
+			pathMatches = false
+			break
+		}
+	}
+
+	return pathMatches
+}
+
+type methods []string
+
+func (m methods) has(method string) bool {
+	if len(m) == 0 {
+		return true
+	}
+
+	for _, method := range m {
+		if method == method {
+			return true
+		}
+	}
+
+	return false
+}
+
 type route struct {
-	path    []string
-	methods []string
+	path    path
+	methods methods
 	handler http.Handler
 }
 
 type middlewireHandler func(http.ResponseWriter, *http.Request) bool
 
 type middlewire struct {
-	path    []string
-	methods []string
+	path    path
+	methods methods
 	async   bool
 	handler middlewireHandler
 }
@@ -41,35 +80,11 @@ func (r *Router) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	requestPath := strings.Split(req.URL.Path, "/")[1:]
 
 	for _, middlewire := range r.middlewires {
-		pathMatches := true
-		for i := range requestPath {
-			if len(middlewire.path) <= i {
-				break
-			} else if middlewire.path[i] == "" {
-				break
-			} else if requestPath[i] != middlewire.path[i] {
-				pathMatches = false
-				break
-			}
-		}
-
-		if !pathMatches {
+		if !middlewire.path.matches(requestPath) {
 			continue
 		}
 
-		methodMatches := false
-		if len(middlewire.methods) == 0 {
-			methodMatches = true
-		} else {
-			for _, method := range middlewire.methods {
-				if method == req.Method {
-					methodMatches = true
-					break
-				}
-			}
-		}
-
-		if !methodMatches {
+		if !middlewire.methods.has(req.Method) {
 			continue
 		}
 
@@ -84,34 +99,11 @@ func (r *Router) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	}
 
 	for _, route := range r.routes {
-		pathMatches := true
-		for i := range requestPath {
-			if len(route.path) <= i {
-				break
-			} else if route.path[i] == "" {
-				break
-			} else if requestPath[i] != route.path[i] {
-				pathMatches = false
-				break
-			}
-		}
-
-		if !pathMatches {
+		if !route.path.matches(requestPath) {
 			continue
 		}
 
-		methodMatches := false
-		if len(route.methods) == 0 {
-			methodMatches = true
-		} else {
-			for _, method := range route.methods {
-				if method == req.Method {
-					methodMatches = true
-				}
-			}
-		}
-
-		if !methodMatches {
+		if !route.methods.has(req.Method) {
 			continue
 		}
 

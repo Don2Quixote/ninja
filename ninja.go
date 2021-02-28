@@ -1,4 +1,4 @@
-package ninja
+package ninjago
 
 import (
 	"net/http"

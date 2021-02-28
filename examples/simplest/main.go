@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/don2quixote/ninja"
+	ninja "github.com/don2quixote/ninjago"
 )
 
 func main() {

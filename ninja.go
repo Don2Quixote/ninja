@@ -31,8 +31,8 @@ func (m methods) has(method string) bool {
 		return true
 	}
 
-	for _, method := range m {
-		if method == method {
+	for _, allowedMethod := range m {
+		if allowedMethod == method {
 			return true
 		}
 	}

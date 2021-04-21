@@ -85,14 +85,14 @@ func (r *Router) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func ThroughMiddlewire(handler func(http.ResponseWriter, *http.Request)) middlewireHandler {
+func ThroughMiddlewire(handler func(http.ResponseWriter, *http.Request)) MiddlewireHandler {
 	return func(res http.ResponseWriter, req *http.Request) bool {
 		handler(res, req)
 		return true
 	}
 }
 
-func (r *Router) SetMiddlewire(path string, handler middlewireHandler) *middlewire {
+func (r *Router) SetMiddlewire(path string, handler MiddlewireHandler) *middlewire {
 	middlewire := middlewire{
 		path:    strings.Split(path, "/")[1:],
 		handler: handler,

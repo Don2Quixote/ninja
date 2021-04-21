@@ -12,13 +12,13 @@ type route struct {
 	handler http.Handler
 }
 
-type middlewireHandler func(http.ResponseWriter, *http.Request) bool
+type MiddlewireHandler func(http.ResponseWriter, *http.Request) bool
 
 type middlewire struct {
 	path    path
 	methods methods
 	async   bool
-	handler middlewireHandler
+	handler MiddlewireHandler
 }
 
 // The reason I used max count is avoiding using pointers ([]*route and []*Middlewire)

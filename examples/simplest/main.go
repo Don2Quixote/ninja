@@ -8,26 +8,26 @@ import (
 )
 
 func main() {
-	// Creating router with setting the max value of handlers and middlewires we will pass to it
+	// Creating router with setting the max value of handlers and middlewares we will pass to it
 	router := ninja.CreateRouter(2, 5)
 
-	// Making this middlewire async because of no need in data access
+	// Making this middleware async because of no need in data access
 	// Actually, I don't recommend to make such easy job to be async - it's harder to create goroutine than place a line in output
-	router.SetMiddlewire("", ninja.ThroughMiddlewire(notifyAboutRequest)).Async()
+	router.SetMiddleware("", ninja.ThroughMiddleware(notifyAboutRequest)).Async()
 
-	// Making these middlewires async is not safe because of danger concurrent access to data (variables-counters)
-	// ThroughMiddlewire passes each request (function-handler doesn't have to return bool value)
+	// Making these middlewares async is not safe because of danger concurrent access to data (variables-counters)
+	// ThroughMiddleware passes each request (function-handler doesn't have to return bool value)
 	// Empty path ("") matches to any path
-	router.SetMiddlewire("", ninja.ThroughMiddlewire(countAllRequests))
-	router.SetMiddlewire("", ninja.ThroughMiddlewire(countGetRequests)).Methods("GET")
-	router.SetMiddlewire("", ninja.ThroughMiddlewire(countPostRequests)).Methods("POST")
+	router.SetMiddleware("", ninja.ThroughMiddleware(countAllRequests))
+	router.SetMiddleware("", ninja.ThroughMiddleware(countGetRequests)).Methods("GET")
+	router.SetMiddleware("", ninja.ThroughMiddleware(countPostRequests)).Methods("POST")
 
-	// If accessMiddlewire function return false, next /access handler won't be called
-	router.SetMiddlewire("/access", accessMiddlewire).Methods("GET")
+	// If accessMiddleware function return false, next /access handler won't be called
+	router.SetMiddleware("/access", accessMiddleware).Methods("GET")
 
 	router.HandleFunc("/access", handleAccess).Methods("GET")
 
-	// If no of handlers above (exclude middlewires) matched, this will match as it's path ("") matches any path
+	// If no of handlers above (exclude middlewares) matched, this will match as it's path ("") matches any path
 	// It also shows that order of handlers is important
 	router.HandleFunc("", handleNotFound)
 
@@ -62,13 +62,13 @@ func countPostRequests(res http.ResponseWriter, req *http.Request) {
 	fmt.Printf("POST requests count: %d\n", postRequestsCount)
 }
 
-func accessMiddlewire(res http.ResponseWriter, req *http.Request) bool {
+func accessMiddleware(res http.ResponseWriter, req *http.Request) bool {
 	pass := req.URL.Query().Get("pass")
 	accessGranted := pass == "test"
 
 	if !accessGranted {
 		res.Write([]byte("Access denied"))
-		// Returning false from middlewire prevents calling of next middlewires and handlers
+		// Returning false from middleware prevents calling of next middlewares and handlers
 		return false
 	}
 

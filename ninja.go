@@ -5,6 +5,14 @@ import (
 	"strings"
 )
 
+func pathFromString(pathString string) path {
+	splitted := strings.Split(pathString, "/")
+	if splitted[0] == "" && len(splitted) > 1 {
+		return splitted[1:]
+	}
+	return splitted
+}
+
 func (p path) matches(requestPath path) bool {
 	if len(p) > len(requestPath) {
 		return false
@@ -49,52 +57,53 @@ func CreateRouter(routesCount, middlewaresCount int) *Router {
 	}
 }
 
-func (r *Router) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	requestPath := strings.Split(req.URL.Path, "/")[1:]
+// nr stands for Ninja Router
+func (nr *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	requestPath := pathFromString(r.URL.Path)
 
-	for _, middleware := range r.middlewares {
+	for _, middleware := range nr.middlewares {
 		if !middleware.path.matches(requestPath) {
 			continue
 		}
 
-		if !middleware.methods.has(req.Method) {
+		if !middleware.methods.has(r.Method) {
 			continue
 		}
 
 		if middleware.async {
-			go middleware.handler(res, req)
+			go middleware.handler(w, r)
 		} else {
-			pass := middleware.handler(res, req)
+			pass := middleware.handler(w, r)
 			if !pass {
 				return
 			}
 		}
 	}
 
-	for _, route := range r.routes {
+	for _, route := range nr.routes {
 		if !route.path.matches(requestPath) {
 			continue
 		}
 
-		if !route.methods.has(req.Method) {
+		if !route.methods.has(r.Method) {
 			continue
 		}
 
-		route.handler.ServeHTTP(res, req)
+		route.handler.ServeHTTP(w, r)
 		break
 	}
 }
 
 func ThroughMiddleware(handler func(http.ResponseWriter, *http.Request)) MiddlewareHandler {
-	return func(res http.ResponseWriter, req *http.Request) bool {
-		handler(res, req)
+	return func(w http.ResponseWriter, r *http.Request) bool {
+		handler(w, r)
 		return true
 	}
 }
 
 func (r *Router) SetMiddleware(path string, handler MiddlewareHandler) *middleware {
 	middleware := middleware{
-		path:    strings.Split(path, "/")[1:],
+		path:    pathFromString(path),
 		handler: handler,
 	}
 
@@ -125,7 +134,7 @@ func (m *middleware) Async() *middleware {
 
 func (r *Router) HandleFunc(path string, handler func(http.ResponseWriter, *http.Request)) *route {
 	route := route{
-		path:    strings.Split(path, "/")[1:],
+		path:    pathFromString(path),
 		handler: http.HandlerFunc(handler),
 	}
 
@@ -141,7 +150,7 @@ func (r *Router) HandleFunc(path string, handler func(http.ResponseWriter, *http
 
 func (r *Router) Handle(path string, handler http.Handler) *route {
 	route := route{
-		path:    strings.Split(path, "/")[1:],
+		path:    pathFromString(path),
 		handler: handler,
 	}
 

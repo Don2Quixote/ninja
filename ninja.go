@@ -40,31 +40,31 @@ func (m methods) has(method string) bool {
 	return false
 }
 
-func CreateRouter(routesCount, middlewiresCount int) *Router {
+func CreateRouter(routesCount, middlewaresCount int) *Router {
 	return &Router{
 		routesMaxCount:      routesCount,
-		middlewiresMaxCount: middlewiresCount,
+		middlewaresMaxCount: middlewaresCount,
 		routes:              make([]route, 0, routesCount),
-		middlewires:         make([]middlewire, 0, middlewiresCount),
+		middlewares:         make([]middleware, 0, middlewaresCount),
 	}
 }
 
 func (r *Router) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	requestPath := strings.Split(req.URL.Path, "/")[1:]
 
-	for _, middlewire := range r.middlewires {
-		if !middlewire.path.matches(requestPath) {
+	for _, middleware := range r.middlewares {
+		if !middleware.path.matches(requestPath) {
 			continue
 		}
 
-		if !middlewire.methods.has(req.Method) {
+		if !middleware.methods.has(req.Method) {
 			continue
 		}
 
-		if middlewire.async {
-			go middlewire.handler(res, req)
+		if middleware.async {
+			go middleware.handler(res, req)
 		} else {
-			pass := middlewire.handler(res, req)
+			pass := middleware.handler(res, req)
 			if !pass {
 				return
 			}
@@ -85,30 +85,30 @@ func (r *Router) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func ThroughMiddlewire(handler func(http.ResponseWriter, *http.Request)) MiddlewireHandler {
+func ThroughMiddleware(handler func(http.ResponseWriter, *http.Request)) MiddlewareHandler {
 	return func(res http.ResponseWriter, req *http.Request) bool {
 		handler(res, req)
 		return true
 	}
 }
 
-func (r *Router) SetMiddlewire(path string, handler MiddlewireHandler) *middlewire {
-	middlewire := middlewire{
+func (r *Router) SetMiddleware(path string, handler MiddlewareHandler) *middleware {
+	middleware := middleware{
 		path:    strings.Split(path, "/")[1:],
 		handler: handler,
 	}
 
-	index := len(r.middlewires)
-	if index == r.middlewiresMaxCount {
-		panic("Middlewires more than allowed max count")
+	index := len(r.middlewares)
+	if index == r.middlewaresMaxCount {
+		panic("Middlewares more than allowed max count")
 	}
 
-	r.middlewires = append(r.middlewires, middlewire)
+	r.middlewares = append(r.middlewares, middleware)
 
-	return &r.middlewires[index]
+	return &r.middlewares[index]
 }
 
-func (m *middlewire) Methods(methods ...string) *middlewire {
+func (m *middleware) Methods(methods ...string) *middleware {
 	for _, method := range methods {
 		m.methods = append(m.methods, method)
 	}
@@ -118,7 +118,7 @@ func (m *middlewire) Methods(methods ...string) *middlewire {
 
 // Undefined behavior if using request's data (working with http.ResponseWriter or *http.Request)
 // Recommended only for job which doesn't require request's data
-func (m *middlewire) Async() *middlewire {
+func (m *middleware) Async() *middleware {
 	m.async = true
 	return m
 }

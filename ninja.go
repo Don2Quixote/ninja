@@ -20,9 +20,6 @@ func (p path) matches(requestPath path) bool {
 
 	for i := range requestPath {
 		if i >= len(p) {
-			if p[len(p)-1] == "" {
-				return true
-			}
 			return false
 		} else if p[i] == "" {
 			return true

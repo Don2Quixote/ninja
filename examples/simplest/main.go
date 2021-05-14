@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"sync/atomic"
 
 	ninja "github.com/don2quixote/ninjago"
 )
@@ -42,23 +43,23 @@ func notifyAboutRequest(res http.ResponseWriter, req *http.Request) {
 }
 
 var (
-	allRequestsCount  = 0
-	getRequestsCount  = 0
-	postRequestsCount = 0
+	allRequestsCount  int32 = 0
+	getRequestsCount  int32 = 0
+	postRequestsCount int32 = 0
 )
 
 func countAllRequests(res http.ResponseWriter, req *http.Request) {
-	allRequestsCount++
+	atomic.AddInt32(&allRequestsCount, 1)
 	fmt.Printf("All requests count: %d\n", allRequestsCount)
 }
 
 func countGetRequests(res http.ResponseWriter, req *http.Request) {
-	getRequestsCount++
+	atomic.AddInt32(&getRequestsCount, 1)
 	fmt.Printf("GET requests count: %d\n", getRequestsCount)
 }
 
 func countPostRequests(res http.ResponseWriter, req *http.Request) {
-	postRequestsCount++
+	atomic.AddInt32(&postRequestsCount, 1)
 	fmt.Printf("POST requests count: %d\n", postRequestsCount)
 }
 
